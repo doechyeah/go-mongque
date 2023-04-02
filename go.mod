@@ -1,4 +1,4 @@
-module github.com/doechyeah/go-queryOp
+module github.com/doechyeah/go-mongque
 
 go 1.19
 

@@ -1,4 +1,4 @@
-package queryop
+package mongque
 
 import (
 	"testing"
