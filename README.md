@@ -44,6 +44,8 @@ _ = coll.FindOne(context.TODO(), filter).Decode(&doc)
 
 ## Features ##
 
+Initial version: `0.1.0`
+
 Operators are based on the MongoDB query operations <https://www.mongodb.com/docs/manual/reference/operator/query/>
 
 Currently supports the following query types:
