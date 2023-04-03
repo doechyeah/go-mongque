@@ -7,12 +7,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func Test_ComparableFieldFilter(t *testing.T) {
+func Test_Eq(t *testing.T) {
 	f := Eq("test", 123).Filter()
 	assert.Equal(t, bson.M{"test": bson.M{string(eq): 123}}, f)
 }
 
-func Test_AndFilter(t *testing.T) {
+func Test_And(t *testing.T) {
 	f := And("test", Eq("test", 123), Neq("test", 321)).Filter()
 	if andFilter, ok := f["test"]; ok {
 		assert.EqualValues(t, bson.M{string(and): bson.D{
