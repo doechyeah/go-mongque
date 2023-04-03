@@ -33,7 +33,7 @@ coll := client.Database("test").Collection("sample")
 filter := mongque.NewFilter( mongoque.Eq("name", "John"), mongque.Lte("score", 60) )
 /**
 bson.M {
-    "summary" : bson.M{"$eq": "This is a test summary"},
+    "summary" : bson.M{"$eq": "sample"},
     "score": bson.M{"$lte": 60},
 }
 */
@@ -61,11 +61,11 @@ Priority is listed in order.
 
 Operators:
 
-- [] Geospatial
-- [] Projection
-- [] Array
-- [] Element
-- [] Evaluation
-- [] Bitwise
+- [ ] Geospatial
+- [ ] Projection
+- [ ] Array
+- [ ] Element
+- [ ] Evaluation
+- [ ] Bitwise
 
 Miscellaneous operators such as `$comment` and `$rand` will not be added.
