@@ -12,7 +12,7 @@ const (
 	and logical = "$and"
 	not logical = "$not"
 	nor logical = "$nor"
-	or  logical = "or"
+	or  logical = "$or"
 )
 
 // AndBson create a new Field for a filter with the $and logical operator with a bson.D object
