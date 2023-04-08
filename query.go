@@ -7,7 +7,7 @@ import (
 // Operable defines the acceptable type of operations to set a field
 type Operable interface {
 	set(val any) bson.M
-	comparator | logical
+	comparator | logical | geospatial
 }
 
 // Field is the base object type to generate the filters.
