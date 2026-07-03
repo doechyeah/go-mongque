@@ -20,25 +20,35 @@ Requires Go 1.19+ (uses generics).
 
 ## Architecture
 
-The whole library is built around one generic type and one constraint:
+The library is built around a typed, field-centric fluent builder:
 
-- **`Operable`** (`query.go`) is a type-set constraint: `comparator | logical | geospatial`. Each operand type is a `string` (e.g. `comparator = "$eq"`) that implements `set(val any) bson.M` — that method is what wraps a value into its Mongo operator document.
-- **`Field[T Operable]`** (`query.go`) is the universal builder: `{name, op, value}`. It renders to a filter via `Filter()` (→ `bson.M`), `FilterD()` (→ `bson.D`), or `FilterE()` (→ `bson.E`, only valid inside a `bson.D`).
-- **`NewFilter` / `NewFilterD`** combine multiple `Field`s of the same operand type `T` into one filter.
+- **`FieldExpr[V any]`** (`query.go`) is the builder: `Field[V](name)` starts
+  it, and operator methods (`.Eq`, `.Gt`, `.In`, `.Exists`, `.GeoWithin`, `.Not`,
+  ...) each return a new `FieldExpr` with one operator appended (immutable value
+  semantics). `V` is the field's value type; comparison methods are compile-time
+  checked against it.
+- **`Op[V any]`** (`query.go`) is a single operator expression (`{key: value}`).
+  Standalone constructors (`Eq`, `Gt`, `In`, ...) build `Op[V]` values used as
+  building blocks, notably inside field-level `Not`.
+- **`Expr`** (`query.go`) is the interface (`Filter() bson.M` / `FilterD() bson.D`)
+  implemented by both `FieldExpr[V]` and the logical combinators — that shared type
+  is what lets heterogeneous fields (`Field[string]`, `Field[int]`) compose inside
+  `And`/`Or`/`Nor`.
+- **`And`/`Or`/`Nor`** (`logical.go`) are top-level combinators over full `Expr`s,
+  emitting `{$and: [...]}` etc. **`Not`** is a field-level method emitting
+  `{field: {$not: {...}}}`. **`NewFilter`/`NewFilterD`** merge several `Expr`s into
+  one document (implicit AND), falling back to `$and` on a field-name collision.
 
-Each operator category lives in its own file and follows the same pattern — a `string` type with a `set` method, a block of `const` operator strings, and exported constructor functions returning `Field[T]`:
-
-- `comparator.go` — `$eq`, `$ne`, `$lte`, `$lt`, `$gte`, `$gt`, `$in`, `$nin` (`Eq`, `Neq`, `Lte`, ...).
-- `logical.go` — `$and`, `$not`, `$nor`, `$or`. Each has two constructors: a variadic `And[T](name, ...Field[T])` that flattens sub-fields via `FilterE()`, and an `*Bson` variant (`AndBson`) taking a raw `bson.D`.
-- `geospatial.go` — `$geoIntersects`, `$geoWithin`, `$near`, `$nearSphere`. Its `set` wraps values as `{"$op": {"$geometry": v}}`. Each op has a plain (`GeoWithin`) and GeoJSON-typed (`GeoWithinGeoJSON[G]`) constructor.
-
-The **`geojson` subpackage** (`geojson/geometry.go`) defines `Geometry[G GeometryTypes]` where `GeometryTypes` is a constraint over `Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon` (each a nested `[]float64` slice type). Constructors like `NewPoint`, `NewPolygon` build these; they carry `bson`/`json` tags for encoding.
+Operator categories live in their own files: `comparator.go`, `logical.go`,
+`geospatial.go`, `element.go`. The **`geojson` subpackage** defines
+`Geometry[G GeometryTypes]` and a `GeometryArg` marker interface so the
+(non-generic) geospatial field methods accept any geometry type.
 
 ### Adding a new operator category
 
-1. Create `<category>.go` with a `type <category> string` and a `func (c <category>) set(v any) bson.M`.
-2. Add the type to the `Operable` union in `query.go`.
-3. Add `const` operator strings and exported constructor functions returning `Field[<category>]`.
+1. Add a `<category>.go` with `FieldExpr[V]` methods that call `f.add(Op[V]{"$op", value})`.
+2. For operators usable inside `Not`, also add a standalone `func Op[V](...) Op[V]` constructor.
+3. Add a `<category>_test.go` asserting the exact `bson.M` for each operator.
 
 ## Conventions
 

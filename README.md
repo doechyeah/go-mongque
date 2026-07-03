@@ -30,10 +30,13 @@ client, _ := mongo.Connect(context.TODO(), clientOptions)
 
 coll := client.Database("test").Collection("sample")
 
-filter := mongque.NewFilter( mongoque.Eq("name", "John"), mongque.Lte("score", 60) )
-/**
-bson.M {
-    "summary" : bson.M{"$eq": "sample"},
+filter := mongque.NewFilter(
+    mongque.Field[string]("name").Eq("John"),
+    mongque.Field[int]("score").Lte(60),
+)
+/*
+bson.M{
+    "name":  bson.M{"$eq": "John"},
     "score": bson.M{"$lte": 60},
 }
 */
@@ -52,6 +55,8 @@ Currently supports the following query types:
 
 - Comparator
 - Logical
+- Geospatial
+- Element
 
 Additional operators are planned to be developed alongside support for building aggregation pipelines.
 
@@ -61,11 +66,9 @@ Priority is listed in order.
 
 Operators:
 
-- [ ] Geospatial
-- [ ] Projection
-- [ ] Array
-- [ ] Element
 - [ ] Evaluation
+- [ ] Array
 - [ ] Bitwise
+- [ ] Projection
 
 Miscellaneous operators such as `$comment` and `$rand` will not be added.
