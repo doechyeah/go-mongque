@@ -52,5 +52,5 @@ Operator categories live in their own files: `comparator.go`, `logical.go`,
 
 ## Conventions
 
-- Tests use `testify/assert` and verify the exact `bson.M`/`bson.D` shape produced by `.Filter()`. Reference operator constants (e.g. `string(eq)`) rather than hardcoding strings.
-- Operator string constants are unexported; only the constructor functions are part of the public API.
+- Tests use `testify/assert` and verify the exact `bson.M`/`bson.D` shape produced by `.Filter()` / `.FilterD()`, asserting against literal `bson.M`/`bson.D` values.
+- Operator strings (`"$eq"`, `"$gt"`, ...) appear only as inline literals inside constructor/method bodies — never exported as constants. The public API is the `Field[V]` builder methods, the standalone `Op[V]` constructors, and the `And`/`Or`/`Nor`/`NewFilter` combinators.

@@ -41,7 +41,7 @@ bson.M{
 }
 */
 
-var Doc Document
+var doc Document
 _ = coll.FindOne(context.TODO(), filter).Decode(&doc)
 ```
 
