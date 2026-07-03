@@ -1,0 +1,29 @@
+name: Release
+
+# Automated SemVer releases via conventional commits.
+# On every push to main, go-semantic-release analyzes commits since the last
+# tag, computes the next version, and creates the git tag + GitHub Release.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write # needed to create tags and GitHub Releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags so the version can be computed
+
+      - name: Go Semantic Release
+        uses: go-semantic-release/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Keep releases in the 0.x range: while below 1.0.0, breaking
+          # changes bump the minor version instead of jumping to 1.0.0.
+          allow-initial-development-versions: true
