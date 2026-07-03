@@ -69,3 +69,32 @@ func Test_NewFilterD_CollisionFallsBackToAnd(t *testing.T) {
 		bson.D{{Key: "age", Value: bson.D{{Key: "$lt", Value: 20}}}},
 	}}}, got)
 }
+
+func Test_LogicalEmpty(t *testing.T) {
+	assert.Equal(t, bson.M{}, And().Filter())
+	assert.Equal(t, bson.M{}, Or().Filter())
+	assert.Equal(t, bson.M{}, Nor().Filter())
+	assert.Equal(t, bson.D{}, And().FilterD())
+	assert.Equal(t, bson.D{}, Or().FilterD())
+	assert.Equal(t, bson.D{}, Nor().FilterD())
+}
+
+func Test_Not_FilterD(t *testing.T) {
+	got := Field[int]("age").Not(Gt(5)).FilterD()
+	assert.Equal(t, bson.D{{Key: "age", Value: bson.D{
+		{Key: "$not", Value: bson.M{"$gt": 5}},
+	}}}, got)
+}
+
+func Test_Not_StandaloneIn(t *testing.T) {
+	got := Field[int]("x").Not(In(1, 2)).Filter()
+	assert.Equal(t, bson.M{"x": bson.M{"$not": bson.M{"$in": []int{1, 2}}}}, got)
+}
+
+func Test_And_Heterogeneous_FilterD(t *testing.T) {
+	got := And(Field[string]("s").Eq("a"), Field[int]("n").Gt(1)).FilterD()
+	assert.Equal(t, bson.D{{Key: "$and", Value: bson.A{
+		bson.D{{Key: "s", Value: bson.D{{Key: "$eq", Value: "a"}}}},
+		bson.D{{Key: "n", Value: bson.D{{Key: "$gt", Value: 1}}}},
+	}}}, got)
+}

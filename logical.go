@@ -11,6 +11,9 @@ type logicalExpr struct {
 
 // Filter renders the logical combinator as a bson.M.
 func (l logicalExpr) Filter() bson.M {
+	if len(l.exprs) == 0 {
+		return bson.M{}
+	}
 	arr := make(bson.A, len(l.exprs))
 	for i, e := range l.exprs {
 		arr[i] = e.Filter()
@@ -20,6 +23,9 @@ func (l logicalExpr) Filter() bson.M {
 
 // FilterD renders the logical combinator as a bson.D.
 func (l logicalExpr) FilterD() bson.D {
+	if len(l.exprs) == 0 {
+		return bson.D{}
+	}
 	arr := make(bson.A, len(l.exprs))
 	for i, e := range l.exprs {
 		arr[i] = e.FilterD()
@@ -27,13 +33,16 @@ func (l logicalExpr) FilterD() bson.D {
 	return bson.D{{Key: l.op, Value: arr}}
 }
 
-// And joins expressions with logical AND: {$and: [...]}.
+// And joins expressions with logical AND: {$and: [...]}. With no
+// arguments it renders an empty (match-all) filter.
 func And(exprs ...Expr) Expr { return logicalExpr{"$and", exprs} }
 
-// Or joins expressions with logical OR: {$or: [...]}.
+// Or joins expressions with logical OR: {$or: [...]}. With no
+// arguments it renders an empty (match-all) filter.
 func Or(exprs ...Expr) Expr { return logicalExpr{"$or", exprs} }
 
-// Nor joins expressions with logical NOR: {$nor: [...]}.
+// Nor joins expressions with logical NOR: {$nor: [...]}. With no
+// arguments it renders an empty (match-all) filter.
 func Nor(exprs ...Expr) Expr { return logicalExpr{"$nor", exprs} }
 
 // Not inverts a single operator on this field: {field: {$not: {op: v}}}.

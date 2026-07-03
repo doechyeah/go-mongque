@@ -24,3 +24,8 @@ func Test_Type_Multiple(t *testing.T) {
 		bson.M{"name": bson.M{"$type": []string{"string", "int"}}},
 		Field[string]("name").Type("string", "int").Filter())
 }
+
+func Test_Type_Empty(t *testing.T) {
+	got := Field[string]("name").Type().Filter()
+	assert.Equal(t, bson.M{"name": bson.M{}}, got)
+}

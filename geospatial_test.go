@@ -28,3 +28,11 @@ func Test_Geospatial(t *testing.T) {
 		bson.M{"loc": bson.M{"$nearSphere": bson.M{"$geometry": pt}}},
 		Field[any]("loc").NearSphere(pt).Filter())
 }
+
+func Test_Geospatial_FilterD(t *testing.T) {
+	pt := geojson.NewPoint([]float64{1, 2})
+	got := Field[any]("loc").Near(pt).FilterD()
+	assert.Equal(t, bson.D{{Key: "loc", Value: bson.D{
+		{Key: "$near", Value: bson.M{"$geometry": pt}},
+	}}}, got)
+}
