@@ -11,6 +11,17 @@ func (g Geometry[G]) SetBBox(bbox []float64) Geometry[G] {
 	return g
 }
 
+// geo marks a type as a GeoJSON geometry. It is unexported so only types
+// in this package can satisfy GeometryArg.
+func (g Geometry[G]) geo() {}
+
+// GeometryArg is any GeoJSON geometry. It lets non-generic consumers
+// (e.g. field builder methods, which cannot themselves be generic in Go)
+// accept any Geometry[G] with compile-time safety.
+type GeometryArg interface {
+	geo()
+}
+
 // TODO implement json marshaller/unmarshaller
 
 const (
