@@ -61,3 +61,36 @@ func (f FieldExpr[V]) FilterD() bson.D {
 	}
 	return bson.D{{Key: f.name, Value: d}}
 }
+
+// NewFilter merges several expressions into one document (implicit AND
+// over distinct fields). On a duplicate top-level key it falls back to
+// And(...) so no clause is silently dropped.
+func NewFilter(exprs ...Expr) bson.M {
+	out := make(bson.M)
+	for _, e := range exprs {
+		for k, v := range e.Filter() {
+			if _, dup := out[k]; dup {
+				return And(exprs...).Filter()
+			}
+			out[k] = v
+		}
+	}
+	return out
+}
+
+// NewFilterD merges several expressions into one ordered document.
+// On a duplicate key it falls back to And(...).
+func NewFilterD(exprs ...Expr) bson.D {
+	seen := make(map[string]bool)
+	var out bson.D
+	for _, e := range exprs {
+		for _, el := range e.FilterD() {
+			if seen[el.Key] {
+				return And(exprs...).FilterD()
+			}
+			seen[el.Key] = true
+			out = append(out, el)
+		}
+	}
+	return out
+}
