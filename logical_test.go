@@ -53,3 +53,19 @@ func Test_NewFilter_CollisionFallsBackToAnd(t *testing.T) {
 		bson.M{"age": bson.M{"$lt": 20}},
 	}}, got)
 }
+
+func Test_NewFilterD_Merge(t *testing.T) {
+	got := NewFilterD(Field[string]("name").Eq("John"), Field[int]("score").Lte(60))
+	assert.Equal(t, bson.D{
+		{Key: "name", Value: bson.D{{Key: "$eq", Value: "John"}}},
+		{Key: "score", Value: bson.D{{Key: "$lte", Value: 60}}},
+	}, got)
+}
+
+func Test_NewFilterD_CollisionFallsBackToAnd(t *testing.T) {
+	got := NewFilterD(Field[int]("age").Gt(5), Field[int]("age").Lt(20))
+	assert.Equal(t, bson.D{{Key: "$and", Value: bson.A{
+		bson.D{{Key: "age", Value: bson.D{{Key: "$gt", Value: 5}}}},
+		bson.D{{Key: "age", Value: bson.D{{Key: "$lt", Value: 20}}}},
+	}}}, got)
+}

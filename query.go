@@ -62,6 +62,8 @@ func (f FieldExpr[V]) FilterD() bson.D {
 	return bson.D{{Key: f.name, Value: d}}
 }
 
+// NewFilter and NewFilterD assume each Expr renders exactly one top-level
+// key per Filter()/FilterD() call, which every current Expr satisfies.
 // NewFilter merges several expressions into one document (implicit AND
 // over distinct fields). On a duplicate top-level key it falls back to
 // And(...) so no clause is silently dropped.
