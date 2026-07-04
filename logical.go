@@ -2,71 +2,52 @@ package mongque
 
 import "go.mongodb.org/mongo-driver/bson"
 
-type logical string
-
-func (l logical) set(val any) bson.M {
-	return bson.M{string(l): val}
+// logicalExpr renders a top-level logical operator over full expressions:
+// {$and: [expr, ...]}.
+type logicalExpr struct {
+	op    string
+	exprs []Expr
 }
 
-const (
-	and logical = "$and"
-	not logical = "$not"
-	nor logical = "$nor"
-	or  logical = "$or"
-)
-
-// AndBson create a new Field for a filter with the $and logical operator with a bson.D object
-func AndBson(name string, values bson.D) Field[logical] {
-	return Field[logical]{name, and, values}
-}
-
-// And create a new Field for a filter with the $and logical operator
-func And[T Operable](name string, values ...Field[T]) Field[logical] {
-	var filters bson.D
-	for _, v := range values {
-		filters = append(filters, v.FilterE())
+// Filter renders the logical combinator as a bson.M.
+func (l logicalExpr) Filter() bson.M {
+	if len(l.exprs) == 0 {
+		return bson.M{}
 	}
-	return AndBson(name, filters)
-}
-
-// NotBson create a new Field for a filter with the $not logical operator with a bson.D object
-func NotBson(name string, val bson.D) Field[logical] {
-	return Field[logical]{name, not, val}
-}
-
-// Not create a new Field for a filter with the $and logical operator
-func Not[T Operable](name string, values ...Field[T]) Field[logical] {
-	var filters bson.D
-	for _, v := range values {
-		filters = append(filters, v.FilterE())
+	arr := make(bson.A, len(l.exprs))
+	for i, e := range l.exprs {
+		arr[i] = e.Filter()
 	}
-	return NotBson(name, filters)
+	return bson.M{l.op: arr}
 }
 
-// NorBson create a new Field for a filter with the $nor logical operator with a bson.D object
-func NorBson(name string, values bson.D) Field[logical] {
-	return Field[logical]{name, nor, values}
-}
-
-// NorOperable create a new Field for a filter with the $and logical operator
-func Nor[T Operable](name string, values ...Field[T]) Field[logical] {
-	var filters bson.D
-	for _, v := range values {
-		filters = append(filters, v.FilterE())
+// FilterD renders the logical combinator as a bson.D.
+func (l logicalExpr) FilterD() bson.D {
+	if len(l.exprs) == 0 {
+		return bson.D{}
 	}
-	return NorBson(name, filters)
-}
-
-// OrBson create a new Field for a filter with the $or logical operator with a bson.D object
-func OrBson(name string, values ...bson.D) Field[logical] {
-	return Field[logical]{name, or, values}
-}
-
-// Or create a new Field for a filter with the $and logical operator
-func Or[T Operable](name string, values ...Field[T]) Field[logical] {
-	var filters bson.D
-	for _, v := range values {
-		filters = append(filters, v.FilterE())
+	arr := make(bson.A, len(l.exprs))
+	for i, e := range l.exprs {
+		arr[i] = e.FilterD()
 	}
-	return OrBson(name, filters)
+	return bson.D{{Key: l.op, Value: arr}}
+}
+
+// And joins expressions with logical AND: {$and: [...]}. With no
+// arguments it renders an empty (match-all) filter.
+func And(exprs ...Expr) Expr { return logicalExpr{"$and", exprs} }
+
+// Or joins expressions with logical OR: {$or: [...]}. With no
+// arguments it renders an empty (match-all) filter.
+func Or(exprs ...Expr) Expr { return logicalExpr{"$or", exprs} }
+
+// Nor joins expressions with logical NOR: {$nor: [...]}. With no
+// arguments it renders an empty (match-all) filter.
+func Nor(exprs ...Expr) Expr { return logicalExpr{"$nor", exprs} }
+
+// Not inverts a single operator on this field: {field: {$not: {op: v}}}.
+// It accepts a comparison Op[V], keeping the negation type-checked
+// against the field's value type.
+func (f FieldExpr[V]) Not(op Op[V]) FieldExpr[V] {
+	return f.add(Op[V]{"$not", bson.M{op.key: op.value}})
 }

@@ -1,62 +1,53 @@
 package mongque
 
-import "go.mongodb.org/mongo-driver/bson"
+// Standalone operator constructors. These build Op[V] values usable on
+// their own (for example inside Not) and are the primitives the FieldExpr
+// methods delegate to.
 
-// var ErrInvalidOP = errors.New("invalid operator used to build query")
+// Eq builds an $eq operator.
+func Eq[V any](v V) Op[V] { return Op[V]{"$eq", v} }
 
-type comparator string
+// Ne builds a $ne operator.
+func Ne[V any](v V) Op[V] { return Op[V]{"$ne", v} }
 
-func (c comparator) set(v any) bson.M {
-	return bson.M{string(c): v}
-}
+// Gt builds a $gt operator.
+func Gt[V any](v V) Op[V] { return Op[V]{"$gt", v} }
 
-const (
-	eq  comparator = "$eq"
-	neq comparator = "$ne"
-	lte comparator = "$lte"
-	lt  comparator = "$lt"
-	gte comparator = "$gte"
-	gt  comparator = "$gt"
-	in  comparator = "$in"
-	nin comparator = "$nin"
-)
+// Gte builds a $gte operator.
+func Gte[V any](v V) Op[V] { return Op[V]{"$gte", v} }
 
-// Eq create a new Field for a filter with the $eq comparator
-func Eq(name string, val any) Field[comparator] {
-	return Field[comparator]{name, eq, val}
-}
+// Lt builds a $lt operator.
+func Lt[V any](v V) Op[V] { return Op[V]{"$lt", v} }
 
-// Neq create a new Field for a filter with the $neq comparator
-func Neq(name string, val any) Field[comparator] {
-	return Field[comparator]{name, neq, val}
-}
+// Lte builds a $lte operator.
+func Lte[V any](v V) Op[V] { return Op[V]{"$lte", v} }
 
-// Lte create a new Field for a filter with the $lte comparator
-func Lte(name string, val any) Field[comparator] {
-	return Field[comparator]{name, lte, val}
-}
+// In builds an $in operator over the given values.
+func In[V any](vs ...V) Op[V] { return Op[V]{"$in", vs} }
 
-// Lt create a new Field for a filter with the $lt comparator
-func Lt(name string, val any) Field[comparator] {
-	return Field[comparator]{name, lt, val}
-}
+// Nin builds a $nin operator over the given values.
+func Nin[V any](vs ...V) Op[V] { return Op[V]{"$nin", vs} }
 
-// Gte create a new Field for a filter with the $gte comparator
-func Gte(name string, val any) Field[comparator] {
-	return Field[comparator]{name, gte, val}
-}
+// Eq appends an $eq comparison against the field's value type.
+func (f FieldExpr[V]) Eq(v V) FieldExpr[V] { return f.add(Eq(v)) }
 
-// Gt create a new Field for a filter with the $lt comparator
-func Gt(name string, val any) Field[comparator] {
-	return Field[comparator]{name, gte, val}
-}
+// Ne appends a $ne comparison.
+func (f FieldExpr[V]) Ne(v V) FieldExpr[V] { return f.add(Ne(v)) }
 
-// In create a new Field for a filter with the $in comparator
-func In(name string, val any) Field[comparator] {
-	return Field[comparator]{name, in, val}
-}
+// Gt appends a $gt comparison.
+func (f FieldExpr[V]) Gt(v V) FieldExpr[V] { return f.add(Gt(v)) }
 
-// Nin create a new Field for a filter with the $nin comparator
-func Nin(name string, val any) Field[comparator] {
-	return Field[comparator]{name, nin, val}
-}
+// Gte appends a $gte comparison.
+func (f FieldExpr[V]) Gte(v V) FieldExpr[V] { return f.add(Gte(v)) }
+
+// Lt appends a $lt comparison.
+func (f FieldExpr[V]) Lt(v V) FieldExpr[V] { return f.add(Lt(v)) }
+
+// Lte appends a $lte comparison.
+func (f FieldExpr[V]) Lte(v V) FieldExpr[V] { return f.add(Lte(v)) }
+
+// In appends an $in comparison over the given values.
+func (f FieldExpr[V]) In(vs ...V) FieldExpr[V] { return f.add(In(vs...)) }
+
+// Nin appends a $nin comparison over the given values.
+func (f FieldExpr[V]) Nin(vs ...V) FieldExpr[V] { return f.add(Nin(vs...)) }
